@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Café y Fe</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #1a0a00;
+    color: #fff;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* NAV */
+  .nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 24px;
+    background: rgba(0,0,0,0.4);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    flex-shrink: 0;
+  }
+  .nav-title { font-size: 14px; color: #c8a876; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+  .nav-controls { display: flex; align-items: center; gap: 12px; }
+  .btn {
+    background: rgba(200,168,118,0.15);
+    border: 1px solid rgba(200,168,118,0.4);
+    color: #c8a876;
+    padding: 7px 18px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .btn:hover { background: rgba(200,168,118,0.3); }
+  .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .slide-counter { font-size: 13px; color: rgba(255,255,255,0.5); min-width: 60px; text-align: center; }
+
+  /* DOTS */
+  .dots { display: flex; gap: 6px; justify-content: center; padding: 8px; flex-shrink: 0; }
+  .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    cursor: pointer; transition: all 0.2s;
+  }
+  .dot.active { background: #c8a876; transform: scale(1.3); }
+
+  /* SLIDES */
+  .slides-wrap { flex: 1; position: relative; overflow: hidden; }
+  .slide {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    padding: 32px 40px;
+    opacity: 0;
+    transform: translateX(60px);
+    transition: all 0.45s cubic-bezier(0.4,0,0.2,1);
+    pointer-events: none;
+  }
+  .slide.active {
+    opacity: 1; transform: translateX(0); pointer-events: auto;
+  }
+  .slide.exit {
+    opacity: 0; transform: translateX(-60px);
+  }
+
+  /* SLIDE TYPES */
+  .slide-hero { text-align: center; }
+  .slide-hero .tag {
+    display: inline-block;
+    background: rgba(200,168,118,0.2);
+    border: 1px solid rgba(200,168,118,0.5);
+    color: #c8a876;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+  }
+  .slide-hero h1 {
+    font-size: clamp(36px, 6vw, 64px);
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+  .slide-hero h1 span { color: #c8a876; }
+  .slide-hero .subtitle {
+    font-size: 16px;
+    color: rgba(255,255,255,0.6);
+    max-width: 500px;
+    line-height: 1.6;
+  }
+  .slide-hero .emoji-big { font-size: 80px; margin-bottom: 16px; display: block; }
+
+  .slide-content { max-width: 720px; width: 100%; }
+  .slide-content .slide-num {
+    font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+    color: #c8a876; margin-bottom: 8px;
+  }
+  .slide-content h2 {
+    font-size: clamp(22px, 4vw, 36px);
+    font-weight: 700; margin-bottom: 24px;
+    line-height: 1.2;
+  }
+  .slide-content h2 span { color: #c8a876; }
+
+  /* CARDS GRID */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; width: 100%; }
+  .card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 18px;
+  }
+  .card .card-icon { font-size: 28px; margin-bottom: 10px; }
+  .card h3 { font-size: 15px; font-weight: 600; color: #c8a876; margin-bottom: 6px; }
+  .card p { font-size: 13px; color: rgba(255,255,255,0.7); line-height: 1.5; }
+
+  /* LIST */
+  .info-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+  .info-list li {
+    display: flex; align-items: flex-start; gap: 12px;
+    background: rgba(255,255,255,0.05);
+    border-left: 3px solid #c8a876;
+    border-radius: 0 10px 10px 0;
+    padding: 12px 16px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: rgba(255,255,255,0.85);
+  }
+  .info-list li .li-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+
+  /* STEPS FLOW */
+  .steps { display: flex; flex-wrap: wrap; gap: 10px; width: 100%; }
+  .step {
+    flex: 1; min-width: 100px;
+    background: rgba(200,168,118,0.12);
+    border: 1px solid rgba(200,168,118,0.3);
+    border-radius: 12px;
+    padding: 14px 12px;
+    text-align: center;
+  }
+  .step .step-icon { font-size: 24px; margin-bottom: 6px; }
+  .step .step-label { font-size: 12px; color: #c8a876; font-weight: 600; }
+  .step .step-desc { font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 4px; line-height: 1.4; }
+
+  /* QUOTE */
+  .quote-box {
+    background: rgba(200,168,118,0.1);
+    border: 1px solid rgba(200,168,118,0.3);
+    border-radius: 16px;
+    padding: 28px 32px;
+    text-align: center;
+    max-width: 600px;
+  }
+  .quote-box .q-mark { font-size: 60px; color: #c8a876; line-height: 0.8; margin-bottom: 12px; }
+  .quote-box blockquote { font-size: 18px; font-style: italic; color: rgba(255,255,255,0.9); line-height: 1.6; margin-bottom: 14px; }
+  .quote-box cite { font-size: 13px; color: rgba(255,255,255,0.5); }
+
+  /* VARIETY COMPARE */
+  .variety-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; width: 100%; }
+  .variety-card {
+    border-radius: 14px;
+    padding: 20px;
+  }
+  .variety-card.arabica { background: linear-gradient(135deg,rgba(53,120,200,0.2),rgba(53,120,200,0.05)); border: 1px solid rgba(53,120,200,0.4); }
+  .variety-card.robusta { background: linear-gradient(135deg,rgba(200,80,50,0.2),rgba(200,80,50,0.05)); border: 1px solid rgba(200,80,50,0.4); }
+  .variety-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .variety-card.arabica h3 { color: #7ab4ff; }
+  .variety-card.robusta h3 { color: #ff9070; }
+  .variety-card .v-sub { font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 14px; }
+  .variety-card ul { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+  .variety-card li { font-size: 13px; color: rgba(255,255,255,0.8); display: flex; gap: 7px; }
+  .variety-card li::before { content: '→'; flex-shrink: 0; }
+
+  /* BG DECO */
+  body::before {
+    content: '☕';
+    position: fixed;
+    font-size: 400px;
+    opacity: 0.04;
+    right: -60px; bottom: -80px;
+    pointer-events: none;
+    line-height: 1;
+  }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <span class="nav-title">☕ Café y Fe</span>
+  <div class="nav-controls">
+    <button class="btn" id="prevBtn" onclick="changeSlide(-1)">← Anterior</button>
+    <span class="slide-counter" id="counter">1 / 10</span>
+    <button class="btn" id="nextBtn" onclick="changeSlide(1)">Siguiente →</button>
+  </div>
+</div>
+
+<div class="dots" id="dots"></div>
+
+<div class="slides-wrap" id="slidesWrap">
+
+  <!-- SLIDE 1: PORTADA -->
+  <div class="slide slide-hero active" id="slide-0">
+    <span class="emoji-big">☕</span>
+    <div class="tag">Senda de Vida · Encuentro de Jóvenes +25</div>
+    <h1>Entre <span>Café</span><br>y Fe</h1>
+    <p class="subtitle">Un viaje sensorial desde la semilla hasta la taza, y una reflexión sobre la vida con propósito.</p>
+  </div>
+
+  <!-- SLIDE 2: QUÉ ES EL CAFÉ -->
+  <div class="slide" id="slide-1">
+    <div class="slide-content">
+      <div class="slide-num">01 — Definición</div>
+      <h2>¿Qué es el <span>café</span>?</h2>
+      <div class="cards">
+        <div class="card">
+          <div class="card-icon">🌱</div>
+          <h3>La semilla</h3>
+          <p>Es la semilla que vive dentro de un fruto rojo llamado <em>cereza de café</em>.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">🌳</div>
+          <h3>La planta</h3>
+          <p>Crece en árboles o arbustos del género <em>Coffea</em>, conocido como cafeto.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">🍒</div>
+          <h3>El fruto</h3>
+          <p>La cereza madura tiene colores rojo o amarillo intenso y un dulzor natural sorprendente.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: ORIGEN -->
+  <div class="slide" id="slide-2">
+    <div class="slide-content">
+      <div class="slide-num">02 — Historia</div>
+      <h2>Su <span>origen</span> legendario</h2>
+      <div class="quote-box" style="width:100%;">
+        <div class="q-mark">"</div>
+        <blockquote>Un pastor llamado Kaldi notó que sus cabras tenían más energía al comer los frutos del cafeto. Movido por la curiosidad, los probó... y experimentó ese mismo efecto energizante.</blockquote>
+        <cite>🐐 Leyenda etíope, siglo IX — Región de Kaffa, Etiopía</cite>
+      </div>
+      <p style="margin-top:16px; font-size:13px; color:rgba(255,255,255,0.5); text-align:center;">De una curiosidad de pastor nació una de las bebidas más consumidas del mundo.</p>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: VARIEDADES -->
+  <div class="slide" id="slide-3">
+    <div class="slide-content">
+      <div class="slide-num">03 — Botánica</div>
+      <h2>Las dos grandes <span>variedades</span></h2>
+      <div class="variety-grid">
+        <div class="variety-card arabica">
+          <h3>Arábica</h3>
+          <div class="v-sub">Coffea arabica · 1–1.5% cafeína</div>
+          <ul>
+            <li>Requiere altitud elevada (+1200 msnm)</li>
+            <li>Sabor delicado y suave</li>
+            <li>Mayor complejidad aromática</li>
+            <li>Más exigente en su cultivo</li>
+          </ul>
+        </div>
+        <div class="variety-card robusta">
+          <h3>Robusta</h3>
+          <div class="v-sub">Coffea canephora · 2–2.7% cafeína</div>
+          <ul>
+            <li>Crece a menor altitud</li>
+            <li>Sabor más intenso y amargo</li>
+            <li>Mayor rendimiento de frutos</li>
+            <li>Más resistente y adaptable</li>
+          </ul>
+        </div>
+      </div>
+      <p style="margin-top:14px; font-size:12px; color:rgba(255,255,255,0.4); text-align:center;">El cafeto tarda 3–4 años en producir y vive entre 15 y 30 años.</p>
+    </div>
+  </div>
+
+  <!-- SLIDE 5: CINTURÓN CAFETERO -->
+  <div class="slide" id="slide-4">
+    <div class="slide-content">
+      <div class="slide-num">04 — Geografía</div>
+      <h2>El <span>cinturón</span> cafetero</h2>
+      <p style="font-size:14px;color:rgba(255,255,255,0.7);margin-bottom:18px;line-height:1.6;">Una franja tropical y subtropical ubicada entre los <strong style="color:#c8a876;">Trópicos de Cáncer y Capricornio</strong>, donde las condiciones son ideales para el cafeto.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+        <div class="card" style="display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:13px;color:#c8a876;font-weight:600;margin-bottom:2px;">🌡️ Condiciones ideales</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.75);line-height:1.6;">Temperaturas estables sin heladas · Precipitaciones abundantes · Sombra regulada · Altitud +1200 msnm</div>
+        </div>
+        <div class="card" style="display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:13px;color:#c8a876;font-weight:600;margin-bottom:2px;">⛰️ ¿Por qué la altura?</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.75);line-height:1.6;">A mayor altitud, la maduración es más lenta. Eso genera mayor <strong style="color:white;">dulzor y complejidad</strong> en el grano.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-size:13px;color:#c8a876;font-weight:600;margin-bottom:8px;">🗺️ Principales países productores</div>
+        <div style="display:flex;flex-wrap:wrap;gap:7px;">
+          {['Brasil','Colombia','Vietnam','Etiopía','Guatemala','Costa Rica','Honduras','Ruanda','Tanzania','India','Panamá','Nicaragua'].map(p=>`<span style="background:rgba(200,168,118,0.15);border:1px solid rgba(200,168,118,0.3);border-radius:20px;padding:3px 11px;font-size:12px;color:rgba(255,255,255,0.8);">${p}</span>`).join('')}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: DE LA PLANTA A LA TAZA -->
+  <div class="slide" id="slide-5">
+    <div class="slide-content">
+      <div class="slide-num">05 — Proceso</div>
+      <h2>De la planta <span>a la taza</span></h2>
+      <div class="steps">
+        <div class="step">
+          <div class="step-icon">🌱</div>
+          <div class="step-label">Cultivo</div>
+          <div class="step-desc">Plantación en clima tropical y altura ideal</div>
+        </div>
+        <div class="step">
+          <div class="step-icon">🍒</div>
+          <div class="step-label">Cosecha</div>
+          <div class="step-desc">Selección manual en punto óptimo</div>
+        </div>
+        <div class="step">
+          <div class="step-icon">💧</div>
+          <div class="step-label">Beneficio</div>
+          <div class="step-desc">Separación del grano del fruto</div>
+        </div>
+        <div class="step">
+          <div class="step-icon">☀️</div>
+          <div class="step-label">Secado</div>
+          <div class="step-desc">Camas africanas o patios, 10–12% humedad</div>
+        </div>
+        <div class="step">
+          <div class="step-icon">⚙️</div>
+          <div class="step-label">Trilla</div>
+          <div class="step-desc">Se obtiene el café oro (grano verde)</div>
+        </div>
+        <div class="step">
+          <div class="step-icon">🔥</div>
+          <div class="step-label">Tueste</div>
+          <div class="step-desc">140–200 °C, reposo 3–5 días</div>
+        </div>
+        <div class="step">
+          <div class="step-icon">☕</div>
+          <div class="step-label">Preparación</div>
+          <div class="step-desc">Molienda, agua y extracción</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7: BENEFICIO -->
+  <div class="slide" id="slide-6">
+    <div class="slide-content">
+      <div class="slide-num">06 — Procesamiento</div>
+      <h2>Los tres <span>beneficios</span></h2>
+      <div class="cards">
+        <div class="card">
+          <div class="card-icon">💧</div>
+          <h3>Lavado</h3>
+          <p>Se retira la pulpa y mucílago con agua y fermentación. Resalta la <strong>acidez y claridad</strong> en taza.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">☀️</div>
+          <h3>Natural</h3>
+          <p>La cereza entera se seca al sol. Da cafés de <strong>cuerpo denso y sabores frutales</strong> intensos.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">🍯</div>
+          <h3>Honey</h3>
+          <p>Se despulpa pero se deja el mucílago. Café <strong>equilibrado</strong> entre lavado y natural.</p>
+        </div>
+      </div>
+      <p style="margin-top:16px; font-size:13px; color:rgba(255,255,255,0.5); text-align:center;"><em>¿Por qué "beneficio"?</em> Viene de la acción de <em>beneficiar</em>: procesar y transformar el fruto para mejorar su calidad.</p>
+    </div>
+  </div>
+
+  <!-- SLIDE 8: CALIDAD -->
+  <div class="slide" id="slide-7">
+    <div class="slide-content">
+      <div class="slide-num">07 — Calidad</div>
+      <h2>El <span>Q Grader</span> y la especialidad</h2>
+      <p style="font-size:14px;color:rgba(255,255,255,0.7);margin-bottom:16px;line-height:1.6;">Un <strong style="color:white;">Q Grader</strong> es un catador profesional certificado por la <strong style="color:white;">SCA</strong> (Specialty Coffee Association). Evalúa el café verde y tostado de forma objetiva y estandarizada.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="card">
+          <div style="font-size:13px;color:#c8a876;font-weight:600;margin-bottom:10px;">📋 ¿Qué evalúa?</div>
+          <div style="display:flex;flex-direction:column;gap:7px;">
+            {['Aroma','Acidez','Cuerpo','Dulzor','Retrogusto'].map(a=>`<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.07);padding-bottom:6px;"><span style="color:rgba(255,255,255,0.75);">${a}</span><span style="color:#c8a876;font-size:11px;">✓ Evaluado</span></div>`).join('')}
+          </div>
+        </div>
+        <div class="card" style="display:flex;flex-direction:column;gap:12px;">
+          <div>
+            <div style="font-size:13px;color:#c8a876;font-weight:600;margin-bottom:8px;">⭐ Puntaje mínimo</div>
+            <div style="font-size:42px;font-weight:700;color:white;line-height:1;">80<span style="font-size:18px;color:rgba(255,255,255,0.4);"> / 100</span></div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:4px;">Para ser café de especialidad</div>
+          </div>
+          <div style="border-top:1px solid rgba(255,255,255,0.1);padding-top:12px;">
+            <div style="font-size:13px;color:#c8a876;font-weight:600;margin-bottom:4px;">🌿 Trazabilidad</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.65);line-height:1.5;">Se conoce el origen, el productor y el proceso exacto de cada lote.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 9: EXPERIENCIA SENSORIAL -->
+  <div class="slide" id="slide-8">
+    <div class="slide-content">
+      <div class="slide-num">08 — Sentidos</div>
+      <h2>Una experiencia <span>sensorial</span></h2>
+      <div class="cards">
+        <div class="card">
+          <div class="card-icon">👁️</div>
+          <h3>Vista</h3>
+          <p>El color del grano, la crema del espresso, el color de la taza ya nos dicen mucho.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">👃</div>
+          <h3>Olfato</h3>
+          <p>Aromas florales, frutales, a chocolate, a nuez… cada origen tiene su identidad.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">👅</div>
+          <h3>Gusto</h3>
+          <p>Acidez, dulzor, amargor, retrogusto. Un café especial cuenta una historia en cada sorbo.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">🤲</div>
+          <h3>Tacto</h3>
+          <p>La textura del grano, el calor de la taza, la sensación del cuerpo del café en boca.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 10: CIERRE -->
+  <div class="slide slide-hero" id="slide-9">
+    <span class="emoji-big">✝️</span>
+    <div class="tag">Reflexión final</div>
+    <h1>El café y <span>la vida</span></h1>
+    <p class="subtitle" style="max-width:580px;">
+      Como el café, cada uno de nosotros nace en condiciones únicas, pasa por procesos que nos forman, y tiene un potencial increíble para desarrollar. El mejor café requiere tiempo, cuidado y las condiciones correctas. ¿Qué estás cultivando en tu vida hoy?
+    </p>
+    <div style="margin-top:28px; background:rgba(200,168,118,0.15); border:1px solid rgba(200,168,118,0.3); border-radius:12px; padding:14px 22px; font-size:14px; color:#c8a876; font-style:italic;">
+      "Porque somos hechura suya, creados en Cristo Jesús para buenas obras." — Ef 2:10
+    </div>
+  </div>
+
+</div><!-- /slides-wrap -->
+
+<script>
+  const total = 10;
+  let current = 0;
+  let isAnimating = false;
+
+  const dotsEl = document.getElementById('dots');
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.onclick = () => goTo(i);
+    dotsEl.appendChild(d);
+  }
+
+  function goTo(n) {
+    if (isAnimating || n === current) return;
+    isAnimating = true;
+    const prev = document.getElementById('slide-' + current);
+    const next = document.getElementById('slide-' + n);
+    prev.classList.remove('active');
+    prev.classList.add('exit');
+    setTimeout(() => { prev.classList.remove('exit'); }, 450);
+    next.classList.add('active');
+    dotsEl.children[current].classList.remove('active');
+    dotsEl.children[n].classList.add('active');
+    current = n;
+    document.getElementById('counter').textContent = (current + 1) + ' / ' + total;
+    document.getElementById('prevBtn').disabled = current === 0;
+    document.getElementById('nextBtn').disabled = current === total - 1;
+    setTimeout(() => { isAnimating = false; }, 450);
+  }
+
+  function changeSlide(dir) { goTo(current + dir); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') changeSlide(1);
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') changeSlide(-1);
+  });
+
+  document.getElementById('prevBtn').disabled = true;
+</script>
+</body>
+</html>
